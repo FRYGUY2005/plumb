@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plumb · the daily dive</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{--sky:#bfeaf2;--txt:#e9f6fb;--mute:#8fb0c2;--acc:#6fd0e8;--panel:rgba(4,12,26,.74);--line:rgba(130,205,235,.22);--dim:0;--ray:1;--sh:6px;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sky:#0a1a2c;color-scheme:dark}}
+:root[data-theme="dark"]{--sky:#0a1a2c;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--sky);color:var(--txt);font:17px/1.4 "Outfit",system-ui,sans-serif;overflow-x:hidden}
+#world{position:fixed;inset:0;overflow:hidden;background:var(--sky);z-index:0}
+.strip{position:absolute;left:0;right:0;top:30vh;height:3600px;background:linear-gradient(#46d3e3 0,#1b88b2 80px,#0d4a7a 400px,#071d3a 1600px,#040b18 2400px,#02050c 2800px);transition:transform 1.7s cubic-bezier(.55,0,.25,1)}
+.strip>i{position:absolute;width:6px;height:6px;border-radius:50%;opacity:.85}
+.rays{position:fixed;left:0;right:0;top:0;height:70vh;z-index:0;pointer-events:none;background:repeating-linear-gradient(105deg,rgba(255,255,255,.16) 0 26px,transparent 26px 96px);-webkit-mask-image:linear-gradient(#000,transparent);mask-image:linear-gradient(#000,transparent);opacity:var(--ray);transition:opacity 1.7s}
+.snow{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(circle,rgba(220,245,255,.55) 1.2px,transparent 1.8px),radial-gradient(circle,rgba(220,245,255,.35) 1px,transparent 1.6px);background-size:140px 170px,90px 110px;animation:sn 24s linear infinite;opacity:.55}
+@keyframes sn{to{background-position:0 -680px,30px -440px}}
+.vig{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(circle at 50% 30vh,transparent 70px,rgba(0,2,8,.94) 400px);opacity:calc(.05 + var(--dim)*.95);transition:opacity 1.7s}
+.diver{position:fixed;left:calc(50% - 30px);top:calc(30vh - 18px);width:60px;height:36px;z-index:2;filter:drop-shadow(0 0 14px rgba(150,230,255,.8));animation:bob 3.4s ease-in-out infinite}
+.diver svg{width:100%;height:100%;display:block}
+.diver.pulse{animation:pu .6s ease-out}
+@keyframes bob{50%{transform:translateY(-6px)}}
+@keyframes pu{40%{transform:scale(1.5)}}
+.gauge{position:fixed;right:10px;top:84px;height:42vh;width:4px;background:rgba(255,255,255,.18);border-radius:3px;z-index:3}
+.gauge i{position:absolute;left:-4px;width:12px;height:12px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc);top:0;transition:top 1.7s cubic-bezier(.55,0,.25,1)}
+.hud{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:16px;right:30px;max-width:560px;margin:0 auto;z-index:3;display:flex;justify-content:space-between;align-items:flex-start;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+.mark{font-weight:300;letter-spacing:.32em;font-size:15px;opacity:.9}
+.dep{text-align:right;font-variant-numeric:tabular-nums}
+.dep b{display:block;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:34px;line-height:1}
+.dep span{font-size:13px;opacity:.8;letter-spacing:.06em}
+main{position:relative;z-index:3;max-width:520px;margin:0 auto;padding:calc(30vh + 44px) 16px 40px}
+.panel{background:var(--panel);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:20px;padding:22px 20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+h1{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:46px;line-height:1;margin:0 0 6px;letter-spacing:.01em;color:#fff}
+h2{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:29px;line-height:1.15;margin:0 0 14px;color:#fff}
+p{margin:0 0 12px}
+.sm{font-size:14px;color:var(--mute)}
+.q{font-family:"Instrument Serif",Georgia,serif;font-style:italic;color:var(--acc)}
+button{font:inherit;font-weight:400;color:#fff;background:rgba(111,208,232,.14);border:1px solid var(--line);padding:10px 20px;border-radius:999px;cursor:pointer;transition:background .15s}
+button:hover,button:focus-visible{background:rgba(111,208,232,.3);outline:2px solid var(--acc);outline-offset:2px}
+button.pri{background:var(--acc);color:#03121c;font-weight:600;border-color:transparent}
+button.pri:hover,button.pri:focus-visible{background:#9be3f3}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.grid button{text-align:left;border-radius:14px;padding:11px 14px}
+input{width:100%;font:inherit;font-size:21px;padding:12px 16px;background:rgba(0,8,18,.6);color:#fff;border:1px solid var(--line);border-radius:14px}
+input::placeholder{color:#58798c}
+input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.hint{min-height:24px;font-size:15px;color:var(--acc);margin:8px 4px 0}.hint b{color:#fff;cursor:pointer;text-decoration:underline;font-weight:400}
+.clock{height:4px;background:rgba(255,255,255,.14);border-radius:3px;margin:2px 0 16px;overflow:hidden}
+.clock i{display:block;height:100%;background:var(--acc);width:100%}
+.res{margin:0 0 14px;padding:12px 14px;background:rgba(0,10,22,.55);border-left:4px solid;border-radius:12px;animation:rin .4s ease-out;transition:opacity 1s}
+.res.fade{opacity:0}
+.res .t{font-family:"Instrument Serif",Georgia,serif;font-size:27px;line-height:1.1}
+.res .t small{font-family:"Outfit",sans-serif;font-size:14px;color:var(--mute);margin-left:8px}
+@keyframes rin{from{transform:translateY(-8px);opacity:0}to{transform:none;opacity:1}}
+.rar{display:flex;gap:4px;margin:8px 0}.rar i{width:26px;height:6px;border-radius:3px;background:rgba(255,255,255,.14)}
+.you{color:#fff;font-size:19px}.you.x{text-decoration:line-through;text-decoration-color:#ff7a7a;color:var(--mute)}
+.fact{margin:0 0 14px;padding:11px 14px;background:rgba(111,208,232,.09);border-radius:12px;font-size:15px;color:#cfeaf4;animation:rin .4s ease-out}
+.fact b{color:var(--acc);font-weight:600;margin-right:8px;font-variant-numeric:tabular-nums}
+.tiers{margin:12px 0 0;padding:0;list-style:none;font-size:15px}
+.tiers li{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.load{padding:26px 0;text-align:center;font-family:"Instrument Serif",Georgia,serif;font-size:30px;color:var(--acc)}
+.load span{animation:bl 1.4s infinite}@keyframes bl{50%{opacity:.2}}
+.big{font-family:"Instrument Serif",Georgia,serif;font-size:76px;line-height:1;color:#fff;margin:2px 0}
+.pips{font-size:26px;letter-spacing:4px;margin:6px 0}
+#flash{position:fixed;inset:0;opacity:0;pointer-events:none;z-index:4}
+#flash.go{animation:fl .9s ease-out}
+@keyframes fl{0%{opacity:var(--fo)}100%{opacity:0}}
+.ring{position:fixed;left:calc(50% - 20px);top:calc(30vh - 20px);width:40px;height:40px;border:3px solid;border-radius:50%;opacity:0;pointer-events:none;z-index:4}
+.ring.go{animation:rg 1.2s ease-out}
+@keyframes rg{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(22)}}
+body.shake #world,body.shake main{animation:sk .5s linear}
+@keyframes sk{0%,100%{transform:none}15%{transform:translate(var(--sh),calc(var(--sh)*-.6))}35%{transform:translate(calc(var(--sh)*-1),calc(var(--sh)*.6))}55%{transform:translate(calc(var(--sh)*.6),var(--sh))}75%{transform:translate(calc(var(--sh)*-.5),calc(var(--sh)*-.4))}}
+.strip.glitch{animation:gl 1.2s ease-in-out}
+@keyframes gl{50%{filter:hue-rotate(70deg) brightness(1.7) saturate(1.6)}}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:5}
+@media (prefers-reduced-motion:reduce){.diver,.snow,.res,.fact,.load span{animation:none}.strip,.gauge i,.vig,.rays{transition:none}}
+</style>
+</head>
+<body>
+<div id="world"><div class="strip" id="strip"></div></div>
+<div class="rays" id="rays"></div><div class="snow"></div><div class="vig"></div>
+<div class="diver" id="diver" aria-hidden="true"><svg viewBox="0 0 60 36"><path d="M4 18C12 4 36 2 50 14L58 6V30L50 22C36 34 12 32 4 18Z" fill="#c9f1fb" stroke="#6fd0e8" stroke-width="2"/><circle cx="16" cy="15" r="2.6" fill="#03121c"/><path d="M26 12C30 17 30 21 26 25" stroke="#6fd0e8" stroke-width="1.6" fill="none"/></svg></div>
+<div class="gauge" aria-hidden="true"><i id="gd"></i></div>
+<div class="hud"><span class="mark">PLUMB</span><div class="dep"><b id="dp">0 m</b><span id="zn">Sunlight zone</span></div></div>
+<main><div class="panel" id="app"></div></main>
+<div id="flash"></div><div class="ring" id="ring"></div><canvas id="fx"></canvas>
+<script>
+const POOL={
+"Words & Language":["Name an English word that starts with “Q”.","Name an English word borrowed from Japanese.","Name an English word of Arabic origin.","Name a palindrome.","Name a language spoken in Africa.","Name a letter of the Greek alphabet.","Name a word meaning “big”.","Name a word meaning “happy”.","Name a punctuation mark or typographic symbol.","Name a collective noun for a group of animals.","Name a word for a lie.","Name a synonym for “truth”.","Name a word for a friend.","Name a shade or word for yellow.","Name a word for a ghost."],
+"Movies & TV":["Name a Pixar movie.","Name a Studio Ghibli film.","Name a film directed by Christopher Nolan.","Name a film directed by Steven Spielberg.","Name a Best Picture winner from the 1990s.","Name a character from The Simpsons.","Name a TV show set in a hospital.","Name a James Bond film.","Name a Marvel Cinematic Universe film.","Name a Disney animated feature released before 2000."],
+"Sports":["Name a sport played at the Summer Olympics.","Name a Formula 1 driver from any era.","Name a country that has hosted the Summer Olympics.","Name an NBA team.","Name a Premier League club from any season.","Name a men’s tennis Grand Slam singles champion.","Name a golf major champion.","Name a sport played with a ball.","Name a combat sport or martial art.","Name a Winter Olympic sport."],
+"Geography":["Name a country in Africa.","Name a river in Europe.","Name a capital city in Asia.","Name a US state capital.","Name a mountain over 7,000 meters.","Name an island country.","Name a desert.","Name a lake in North America.","Name a city with more than 5 million people.","Name a sea or gulf."],
+"Music":["Name a Beatles song.","Name a Queen song.","Name a classical composer.","Name an instrument in a symphony orchestra.","Name a jazz musician.","Name a Taylor Swift song.","Name a hip-hop artist.","Name a Grammy Album of the Year winner.","Name a band from the 1980s.","Name a type of drum."],
+"Science & Nature":["Name an element on the periodic table.","Name a moon in our solar system.","Name a bone in the human body.","Name a type of cloud or weather phenomenon.","Name a mineral or gemstone.","Name a Nobel Prize in Physics winner.","Name a tree.","Name a constellation.","Name a unit of measurement.","Name something found underground."],
+"Food & Drink":["Name a type of pasta.","Name a cheese.","Name a cocktail.","Name a fruit.","Name a spice or herb.","Name a type of bread.","Name a dish from Japan.","Name a type of tea.","Name a type of sausage.","Name a vegetable."],
+"History":["Name a Roman emperor.","Name a US president.","Name an ancient civilization or empire.","Name a battle of World War II.","Name a British monarch.","Name an Egyptian pharaoh.","Name an explorer.","Name a historical treaty.","Name a medieval weapon or piece of armor.","Name a historical figure known by a nickname."],
+"Animals":["Name a bird.","Name a dog breed.","Name a mammal native to Australia.","Name a species of shark.","Name a cat breed or wild cat species.","Name a type of snake.","Name an insect.","Name a deep-sea creature.","Name a primate.","Name a nocturnal animal."],
+"Technology":["Name a web browser.","Name a programming language.","Name a video game console.","Name a social media platform, past or present.","Name an operating system.","Name a search engine, past or present.","Name a file extension.","Name a famous computer scientist.","Name a type of cable or connector.","Name a mobile phone brand, past or present."],
+"Art & Literature":["Name a Shakespeare play.","Name a Charles Dickens novel.","Name a Renaissance painter.","Name an Impressionist painter.","Name a poet.","Name a Nobel Prize in Literature winner.","Name a Greek or Roman god.","Name a fairy tale.","Name a character from Harry Potter.","Name a famous museum.","Name a part of a book.","Name a famous mystery or thriller author.","Name a genre of fiction.","Name something you’d find in a writer’s office."],
+"Games":["Name a board game.","Name a Nintendo game franchise.","Name an original Pokémon.","Name a chess opening.","Name a card game.","Name a Legend of Zelda game.","Name a Minecraft mob.","Name a Super Smash Bros. fighter.","Name a Dungeons & Dragons monster.","Name a tabletop role-playing game."],
+"Everyday":["Name a type of hat.","Name a type of shoe.","Name a fabric or textile.","Name a currency.","Name a famous bridge.","Name a car brand.","Name a type of knot.","Name a hand tool.","Name a piece of furniture.","Name a flower.","Name a type of door.","Name something famously yellow.","Name a color of ink."]
+};
+const BUILTIN={"Name a synonym for “truth”.": "0:Fact|Facts;0:Honesty;2:Reality;2:Accuracy;2:Veracity;2:Candor|Candour;2:Authenticity;2:Truthfulness;3:Verity;3:Gospel;3:Actuality;3:Sincerity;3:Factuality;4:Veridicality;4:Genuineness;5:Sooth;5:Troth", "Name a genre of fiction.": "0:Thriller;0:Romance;0:Mystery;0:Horror;2:Psychological thriller;2:Suspense;2:Fantasy;2:Science fiction|Sci-fi|Scifi;2:Crime;2:Gothic;2:Domestic noir;2:Romantic suspense;2:Drama;3:Noir;3:Dark romance;3:Whodunit|Whodunnit;3:Paranormal;4:Southern gothic;4:Cozy mystery;4:Epistolary;5:Locked room mystery|Locked-room mystery;5:Weird fiction", "Name something you’d find in a writer’s office.": "0:Desk;0:Laptop;0:Books|Book;0:Pen;0:Paper;2:Notebook;2:Chair;2:Lamp;2:Bookshelf|Bookcase|Shelves;2:Coffee;2:Typewriter;2:Manuscript;2:Sticky notes|Post-its;2:Notes;2:Pencil;3:Dictionary;3:Thesaurus;3:Whiteboard;3:Highlighter;3:Index cards;3:Drafts;4:Red pen;4:Candle;4:Rejection letters;5:Ink bottle|Inkwell;5:Quill;5:Paperweight;5:Cork board|Corkboard", "Name a word for a lie.": "0:Lie;0:Fib;2:Falsehood;2:Untruth;2:Deception;2:Fabrication;2:Fiction;2:Whopper;2:Deceit;3:Fairy tale;3:Tall tale;3:Hoax;3:Perjury;3:Spin;4:Prevarication;4:Mendacity;4:Canard;4:Porky|Porky pie|Pork pie;5:Terminological inexactitude;5:Fabulation", "Name a part of a book.": "0:Chapter;0:Page;0:Cover;0:Title;2:Prologue;2:Epilogue;2:Spine;2:Index;2:Dedication;2:Preface;2:Foreword;2:Acknowledgments|Acknowledgements;2:Table of contents;2:Epigraph;2:Appendix;2:Blurb;2:Footnote;3:Afterword;3:Glossary;3:Bibliography;3:Dust jacket;3:Endpaper|Endpapers;4:Frontispiece;4:Flyleaf;4:Gutter;5:Colophon;5:Errata;5:Half title;5:Verso;5:Recto", "Name a famous mystery or thriller author.": "0:Stephen King;0:Agatha Christie;2:Gillian Flynn;2:Dan Brown;2:Colleen Hoover;2:Edgar Allan Poe|Poe;2:Paula Hawkins;2:Tana French;2:Ruth Ware;2:Alex Michaelides;2:Lee Child;2:James Patterson;2:Daphne du Maurier;2:Patricia Highsmith;2:Shirley Jackson;3:Freida McFadden;3:Lisa Jewell;3:Riley Sager;3:Dennis Lehane;3:Raymond Chandler;3:Dashiell Hammett;3:Wilkie Collins;4:Georges Simenon;4:Josephine Tey;4:Ngaio Marsh;4:Dorothy L. Sayers;4:Karin Slaughter;5:Margery Allingham;5:Cornell Woolrich;5:Celia Fremlin", "Name a color of ink.": "0:Black;0:Blue;0:Red;2:Green;2:Purple;2:Brown;2:Gold;2:Silver;2:Pink;3:Sepia;3:Orange;3:White;3:Turquoise;4:Indigo;4:Burgundy;4:Teal;5:Iron gall;5:Oxblood;5:Vermilion", "Name a shade or word for yellow.": "0:Gold|Golden;0:Lemon;0:Sunny;2:Mustard;2:Canary;2:Amber;2:Blonde;2:Honey;2:Saffron;2:Butter;2:Daffodil;2:Banana;2:Sunflower;2:Yellowish|Yellowy;2:Citrine;3:Maize;3:Flaxen;3:Ochre|Ocher;3:Straw;3:Cream;3:Corn;3:Topaz;3:Dandelion;4:Jaundiced;4:Chartreuse;4:Xanthic;4:Primrose;4:Goldenrod;5:Xanthous;5:Cadmium yellow|Cadmium;5:Naples yellow;5:Gamboge;5:Flavescent", "Name a word for a friend.": "0:Buddy;0:Pal;0:Mate;0:Companion;2:Bestie|Best friend|BFF;2:Ally;2:Chum;2:Bro;2:Homie;2:Amigo;2:Comrade;2:Confidant;2:Sidekick;2:Partner;2:Playmate;2:Crony;3:Soulmate;3:Kindred spirit;3:Bosom buddy;3:Wingman;3:Compadre;3:Cobber;4:Familiar;4:Cohort;4:Mucker;5:Helpmate;5:Confrere;5:Fidus Achates", "Name a nocturnal animal.": "0:Owl;0:Bat;2:Raccoon;2:Fox;2:Hedgehog;2:Opossum|Possum;2:Wolf;2:Cat;2:Skunk;2:Badger;2:Firefly|Fireflies;2:Moth;2:Leopard;2:Lemur;2:Aye-aye;2:Mouse|Rat;2:Armadillo;2:Tarsier;3:Kiwi;3:Kinkajou;3:Bushbaby|Galago;3:Slow loris|Loris;3:Pangolin;3:Tasmanian devil;3:Aardvark;3:Kakapo;3:Cockroach|Roach;3:Flying squirrel;3:Fennec fox;3:Nighthawk;4:Potoo;4:Tenrec;4:Sugar glider;4:Bilby;4:Fossa;4:Springhare;4:Binturong;5:Solenodon;5:Olinguito;5:Owl monkey|Night monkey;5:Oilbird", "Name something found underground.": "0:Rocks|Rock;0:Roots;0:Worms|Worm;0:Dirt|Soil;0:Caves|Cave;2:Tunnels|Tunnel;2:Coal;2:Water|Groundwater;2:Bones|Fossils|Fossil;2:Minerals;2:Oil;2:Gold;2:Diamonds|Diamond;2:Bunker;2:Subway|Metro;2:Magma|Lava;2:Crystals|Crystal;2:Geode|Geodes;2:Aquifer;2:Pipes;2:Insects|Ants|Ant;2:Moles|Mole;2:Gravel;2:Bedrock;2:Sewers|Sewer;2:Natural gas|Gas;2:Mines|Mine;3:Catacombs;3:Truffles|Truffle;3:Burrow|Rabbit hole;3:Cables;3:Clay;3:Stalactites|Stalagmites;3:Treasure;3:Ruins;3:Cellar;3:Mushrooms|Fungi;4:Mycelium;4:Cenotes|Cenote;4:Sinkholes|Sinkhole;4:Salt;4:Lava tubes;4:Uranium;5:Troglobites|Troglobite;5:Speleothems|Speleothem;5:Permafrost", "Name something famously yellow.": "0:Banana;0:Sun;0:Lemon;0:School bus;0:Taxi|Cab;0:Pikachu;0:SpongeBob|Spongebob;2:Minions|Minion;2:Rubber duck;2:Sunflower;2:Cheese;2:Butter;2:Corn;2:Big Bird;2:Tweety;2:Simpsons|Homer|Homer Simpson;2:Smiley|Emoji;2:Post-it|Sticky note;2:Canary;2:Winnie the Pooh|Pooh;2:Daffodil;2:Tennis ball;2:Safety vest|Hi-vis|High vis;2:Mustard;2:Pineapple;2:Honey;2:Gold;2:Duckling|Duck;2:Yellow card;2:Yellow submarine;3:Yellow brick road;3:Yellow jersey|Maillot jaune|Tour de France jersey;3:Caution tape;3:Lego;3:Bumblebee;3:Wolverine suit|Wolverine;3:Sponge;3:Hornet;3:Wasp;3:Yellow Pages;3:Chick|Chicks;3:Marigold;3:Buttercup;3:Dandelion;4:Dijon;4:Yellowhammer;4:Goldfinch;4:Forsythia;4:Tansy;4:Saffron;4:Sulfur|Sulphur;4:Turmeric;4:Curry;5:Canary diamond|Yellow diamond;5:Brimstone;5:Orpiment;5:Jaundice;5:Yellow fever", "Name a word for a ghost.": "0:Ghost;0:Spirit;0:Phantom;0:Spook;2:Specter|Spectre;2:Wraith;2:Apparition;2:Poltergeist;2:Banshee;2:Shade;2:Haunt;2:Revenant;2:Ghoul;2:Soul;2:Presence;2:Shadow;2:Boo;2:Casper;3:Wight;3:Eidolon;3:Manes;3:Doppelganger;3:Fetch;4:Umbra;4:Phantasm;4:Draugr;4:Dybbuk;4:Yurei;4:Onryo;5:Phasma;5:Fylgja", "Name a type of door.": "0:Front door;0:Back door;0:Trapdoor|Trap door;0:Sliding door;0:Gate;2:Revolving door;2:French door|French doors;2:Barn door;2:Screen door;2:Garage door;2:Hatch;2:Saloon doors|Saloon door|Swinging doors;2:Automatic door;2:Fire door;2:Security door;2:Dutch door|Stable door;2:Pocket door;2:Bifold door|Bi-fold door;2:Cat flap|Cat door|Pet door;2:Airlock;2:Turnstile;2:Portcullis;2:Drawbridge;2:Secret door|Hidden door;2:Porthole;2:Glass door;2:Wooden door;2:Iron door;2:Patio door;3:Vault door;3:Bulkhead;3:Cellar door|Storm door;3:Wicket|Wicket gate;3:Lych gate|Lychgate;3:Louvered door;3:Folding door|Accordion door;3:Blast door;3:Shoji;3:Hobbit door|Round door;3:Tent flap;3:Dog door;4:Pivot door;4:Tambour door;4:Roller shutter;4:Rolling door;4:Elevator door|Lift door;4:Dumbwaiter;4:Wardrobe;4:Mouse hole;5:Postern;5:Sally port"};
+const PTS=[10,15,30,60,85,100];
+const TIERS=[["Barnacle","#9fb4c0","⬜"],["Smartfish","#d4e36a","🟨"],["Mackerel","#6fd0e8","🟦"],["Anglerfish","#35e0c0","🟩"],["Giant Squid","#c070ff","🟪"],["Leviathan","#ffe08a","🟧"]];
+const DESC=["Obvious. Nearly everyone says this.","Too clever: the usual “obscure” pick, and plenty of people reach for it.","Solid, and beyond the first thought.","Rare. Few people think of this one.","A deep cut for real specialists.","One in a million, and a delight to land on."];
+const FACTS=[[0,"Pressure rises by about one atmosphere for every 10 meters you descend."],[40,"Recreational scuba diving is capped at around 40 meters."],[200,"Below about 200 meters, sunlight is nearly gone. The twilight zone begins."],[332,"The deepest scuba dive on record is about 332 meters, set in 2014."],[600,"Many animals in the open ocean make their own light below 200 meters. It is called bioluminescence."],[1000,"No sunlight reaches below about 1,000 meters. Down here the only light is made by living things."],[1500,"Elephant seals can dive deeper than 1,500 meters on a single breath."],[2500,"Hydrothermal vents were first seen in 1977 near the Galápagos, at about 2,500 meters."],[2992,"Cuvier’s beaked whales hold the mammal dive record, at about 2,992 meters."],[3700,"The average depth of the ocean is about 3,700 meters."],[3800,"The wreck of the Titanic lies at about 3,800 meters."],[4000,"The abyssal zone begins here, where the water sits near freezing."],[4500,"Marine snow, drifting bits of dead plankton and waste, takes weeks to sink this far."],[5000,"At 5,000 meters the pressure is roughly 500 times what it is at the surface."],[5500,"In some species of anglerfish, the tiny male permanently fuses to the female."],[6000,"The hadal zone is named for Hades. It starts at 6,000 meters and is found mostly in trenches."],[6900,"In 2022 a snailfish was filmed at about 8,336 meters in the Izu-Ogasawara Trench, deeper than any fish seen before."],[7000,"The Mariana Trench’s Challenger Deep is about 10,935 meters deep, nearly four kilometers beyond this."]];
+const FX=[{c:["#bfe8f2","#8fd3e0"],n:10,k:"b",fl:0,sh:0},{c:["#d4e36a","#f2f7b0","#bfe8f2"],n:18,k:"b",fl:0,sh:0},{c:["#6fd0e8","#d8f6ff","#ffffff"],n:34,k:"s",fl:.12,fc:"#6fd0e8",sh:0},{c:["#35e0c0","#9ffcea","#1fa58f"],n:64,k:"s",fl:.25,fc:"#35e0c0",sh:3,ring:"#35e0c0"},{c:["#c070ff","#e8b8ff","#6a2bd1","#ffffff"],n:110,k:"s",fl:.35,fc:"#a050ff",sh:6,ring:"#c070ff"},{c:["#ffe08a","#ffffff","#6fd0e8","#c070ff","#35e0c0"],n:230,k:"s",fl:.6,fc:"#fff6d0",sh:10,ring:"#ffe08a",gl:1}];
+const MISS={c:["#1b2b3a","#0a1220","#3a4a5a"],n:26,k:"d",fl:.25,fc:"#000a14",sh:0};
+const parse=s=>s.split(";").map(x=>{const i=x.indexOf(":"),a=x.slice(i+1).split("|");return{t:+x.slice(0,i),d:a[0],a}});
+const nz=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[’']/g,"").replace(/&/g,"and").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim().replace(/^(the|a|an) /,"");
+function osa(a,b){const m=a.length,n=b.length,d=[];for(let i=0;i<=m;i++){d[i]=[i];for(let j=1;j<=n;j++)d[i][j]=i?0:j}
+ for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1)}return d[m][n]}
+function exact(es,n){for(const e of es)for(const al of e.a){const m=nz(al);if(m===n||m===n.replace(/s$/,"")||m+"s"===n)return e}return null}
+function fuzzy(es,n){let b=null,bd=9;if(n.length<4)return null;for(const e of es)for(const al of e.a){const m=nz(al);if(m.length<4)continue;const k=Math.max(1,Math.floor(Math.max(n.length,m.length)/4)),d=osa(n,m);if(d<=k&&d<bd){bd=d;b=e}}return b}
+function find(es,v){const n=nz(v);if(!n)return null;const e=exact(es,n);if(e)return{e};const f=fuzzy(es,n);return f?{e:f,fixed:1}:null}
+const suggest=(es,v)=>{const n=nz(v);return n.length<3||exact(es,n)?null:fuzzy(es,n)};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const shuf=(a,r)=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pid=q=>{let h=0;for(const c of q)h=(h*31+c.charCodeAt(0))|0;return"p"+(h>>>0).toString(36)};
+const $=id=>document.getElementById(id),app=$("app"),rm=()=>matchMedia("(prefers-reduced-motion:reduce)").matches;
+const LIM=25000,PX=4,fm=m=>Math.round(m).toLocaleString("en-US")+" m",zone=m=>m<200?"Sunlight zone":m<1000?"Twilight zone":m<4000?"Midnight zone":m<6000?"Abyssal zone":"Hadal zone";
+let SM=null,DB=null,g,tm,rt,st="home",sg=null,noAI=false;
+(async()=>{try{if(window.claude&&claude.use){SM=await claude.use("sample");DB=await claude.use("db")}}catch(e){}const l=$("ai");if(l)l.textContent=SM?"Unlimited prompts and answer sets are written by Claude on your own account, and it asks permission the first time.":"AI-written question sets are not available here, so you are playing the built-in set."})();
+const avail=q=>(SM&&!noAI)||BUILTIN[q];
+const dk=d=>d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+const dlabel=d=>d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+(function decor(){const r=rng(5);let h="";for(let i=0;i<150;i++){const y=420+r()*3000,q=r(),c=q<.4?"#35e0c0":q<.7?"#c070ff":"#6fd0e8";h+=`<i style="left:${(r()*100).toFixed(1)}%;top:${y|0}px;background:${c};box-shadow:0 0 10px 2px ${c}"></i>`}$("strip").insertAdjacentHTML("beforeend",h)})();
+function place(s,inst){const sp=$("strip");if(inst){sp.style.transition="none";sp.style.transform=`translateY(${-s*PX}px)`;void sp.offsetWidth;sp.style.transition=""}else sp.style.transform=`translateY(${-s*PX}px)`}
+function hud(m){$("dp").textContent=fm(m);$("zn").textContent=zone(m)}
+function meter(){const s=g?g.score:0,m=s*10,R=document.documentElement.style;R.setProperty("--dim",m/7000);R.setProperty("--ray",Math.max(0,1-m/260));$("gd").style.top=`calc(${m/70}% - 6px)`;hud(m)}
+function descend(a,b){meter();const q=rm()||a===b;place(b,q);if(q)return;const t0=performance.now(),D=1700;(function f(n){const k=Math.min(1,(n-t0)/D),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;hud((a+(b-a)*e)*10);if(k<1)requestAnimationFrame(f)})(t0)}
+function showFact(a,b){const A=a*10,B=b*10,c=[];FACTS.forEach((f,i)=>{if(f[0]>=A&&f[0]<=B&&!g.seen.includes(i)){c.push(i);g.seen.push(i)}});if(!c.length)return;const f=FACTS[c[c.length-1]];$("fact").innerHTML=`<div class="fact"><b>${fm(f[0])}</b>${f[1]}</div>`}
+const cv=$("fx"),cx=cv.getContext("2d");let ps=[],raf=0;
+function rs(){cv.width=innerWidth;cv.height=innerHeight}addEventListener("resize",rs);rs();
+function loop(){cx.clearRect(0,0,cv.width,cv.height);ps=ps.filter(p=>p.l>0);for(const p of ps){p.t=(p.t||0)+1;p.x+=p.vx+(p.k==="b"?Math.sin(p.t/9)*.5:0);p.y+=p.vy;if(p.k==="s"){p.vx*=.96;p.vy=p.vy*.96-.012}else if(p.k==="d")p.vy+=.004;p.l-=p.d;cx.globalAlpha=Math.max(0,p.l);cx.beginPath();cx.arc(p.x,p.y,p.z,0,6.283);if(p.k==="b"){cx.strokeStyle=p.c;cx.lineWidth=1.5;cx.stroke()}else{cx.fillStyle=p.c;cx.fill()}}cx.globalAlpha=1;raf=ps.length?requestAnimationFrame(loop):0}
+function re(el,c="go"){el.classList.remove(c);void el.offsetWidth;el.classList.add(c)}
+function effects(t){const f=t<0?MISS:FX[t],q=rm(),n=q?Math.min(8,f.n):f.n;
+ for(let i=0;i<n;i++){const a=Math.random()*6.283,s=1+Math.random()*(3+Math.max(t,0)*1.3);ps.push({k:f.k,x:innerWidth/2+(f.k==="b"?(Math.random()-.5)*50:0),y:innerHeight*.3,vx:f.k==="s"?Math.cos(a)*s:(Math.random()-.5)*.8,vy:f.k==="b"?-(1+Math.random()*2):f.k==="d"?.3:Math.sin(a)*s,l:1,d:.007+Math.random()*.011,z:f.k==="b"?3+Math.random()*6:f.k==="d"?6+Math.random()*12:1.5+Math.random()*(t>=4?4.5:3),c:f.c[i%f.c.length]})}
+ if(!raf)raf=requestAnimationFrame(loop);if(q)return;
+ if(f.fl){const e=$("flash");e.style.background=f.fc;e.style.setProperty("--fo",f.fl);re(e)}
+ if(f.sh){document.body.style.setProperty("--sh",f.sh+"px");re(document.body,"shake")}
+ if(f.ring){$("ring").style.borderColor=f.ring;re($("ring"))}
+ if(f.gl)re($("strip"),"glitch");
+ if(t>=3)re($("diver"),"pulse")}
+let act=0;const wq=[];const lim=f=>new Promise((res,rej)=>{const run=()=>{act++;f().then(res,rej).finally(()=>{act--;const n=wq.shift();n&&n()})};act<2?run():wq.push(run)});
+const withTimeout=(p,ms)=>Promise.race([p,new Promise((_,j)=>setTimeout(()=>j({code:"timeout"}),ms))]);
+const bankPrompt=q=>`You are building the curated answer set for a rare-answer trivia game. Players type one answer to the prompt and score more for answers that fewer people think of.
+Prompt: "${q}"
+List 80 to 110 distinct answers that fully satisfy the exact wording of the prompt, all strictly accurate, spanning the whole range from famous to obscure. For each give n (canonical name), a (array of up to 3 alternate spellings, aliases or short forms, may be empty) and t (familiarity tier):
+0 = obvious, what nearly everyone says first (4 to 8 answers)
+1 = too clever: the predictable "obscure" pick that many trivia fans reach for (3 to 6 answers)
+2 = solid but beyond the first thought (15 to 25 answers)
+3 = rare, known mainly by people who follow the area (20 to 30 answers)
+4 = deep cut, specialist knowledge but unmistakably valid (20 to 30 answers)
+5 = exactly 2 to 4 delightful, extremely obscure answers that are still verifiable
+Output ONLY a JSON array of objects like {"n":"Name","a":["alias"],"t":2}. No commentary.`;
+function fromModel(arr){if(arr&&!Array.isArray(arr))arr=arr.answers;const out=[],seen=new Set(),cl=s=>String(s).replace(/[;|]/g," ").replace(/\s+/g," ").trim().slice(0,60);for(const x of arr||[]){if(!x||typeof x.n!=="string")continue;const n=cl(x.n),k=nz(n);if(!n||!k||seen.has(k))continue;seen.add(k);out.push({t:Math.max(0,Math.min(5,x.t|0)),d:n,a:[n,...(Array.isArray(x.a)?x.a.slice(0,3).map(cl).filter(Boolean):[])]})}return out}
+const cacheLocal=(id,s)=>{try{localStorage.setItem("plumb-set-"+id,s)}catch(e){}};
+async function getBank(q){const id=pid(q);
+ if(BUILTIN[q])return parse(BUILTIN[q]);
+ try{const s=localStorage.getItem("plumb-set-"+id);if(s)return parse(s)}catch(e){}
+ if(DB){try{const d=await withTimeout(DB.doc("sets/"+id).get(),4000);if(d&&d.exists){const x=d.data()||{};if(x.q===q&&x.s){cacheLocal(id,x.s);return parse(x.s)}}}catch(e){}}
+ if(!SM||noAI)throw{code:"unavailable"};
+ const b=fromModel(await lim(()=>SM.json(bankPrompt(q),{modelTier:"quick"})));if(b.length<15)throw{code:"thin"};
+ const s=b.map(e=>e.t+":"+e.a.join("|")).join(";");cacheLocal(id,s);if(DB)DB.doc("sets/"+id).set({q,s}).catch(()=>{});return b}
+function recent(){try{return JSON.parse(localStorage.getItem("plumb-recent")||"[]")}catch(e){return[]}}
+async function genPrompts(pack){const used=recent().slice(-40),seeds=shuf(["river","1970s","tools","royalty","coastal","recipes","rare","ancient","modern","small","loud","green","famous","hidden","northern","tiny","festival","myth","machine","sport","comedy","space","cold","sweet","paper"],Math.random).slice(0,3).join(", ");
+ const a=await lim(()=>SM.json(`Invent 7 different open-ended prompts for a rare-answer trivia game. Pack: ${pack}. Each is a short imperative like "Name a ..." with a precise boundary so anything that fits is valid, and each must have at least 150 valid answers ranging from famous to obscure. Vary the sub-topics widely, taking loose inspiration from these random words: ${seeds}. Do not repeat or closely resemble: ${used.join(" / ")||"nothing yet"}. Output ONLY a JSON array of 7 strings.`,{modelTier:"quick",cache:false}));
+ const o=(Array.isArray(a)?a:a&&a.prompts||[]).filter(x=>typeof x==="string"&&x.length>10&&x.length<110);if(o.length<7)throw{code:"thin"};
+ try{localStorage.setItem("plumb-recent",JSON.stringify(recent().concat(o).slice(-80)))}catch(e){}return o.slice(0,7)}
+async function judge(q,es,v){const ex=shuf(es,Math.random).slice(0,14).map(e=>e.t+": "+e.d).join("; ");
+ const r=await withTimeout(lim(()=>SM.json(`Rare-answer trivia. Prompt: "${q}"
+Player answer: "${v}"
+Decide strictly whether this is a real, correct answer to the prompt (accept reasonable spelling variants, reject anything that does not satisfy the exact wording). If valid, give its canonical name and a familiarity tier 0-5 (0 nearly everyone says it first, 1 the predictable "clever" pick, 2 beyond the first thought, 3 rare, 4 deep cut for specialists, 5 astonishingly obscure but verifiable). Calibration examples (tier: answer): ${ex}.
+Output ONLY JSON: {"valid":true,"n":"canonical name","t":2} or {"valid":false}`,{modelTier:"quick",cache:false})),14000);
+ if(!r||!r.valid||typeof r.n!=="string")return null;const n=r.n.replace(/[;|]/g," ").slice(0,60);return{t:Math.max(0,Math.min(5,r.t|0)),d:n,a:[n,v]}}
+function pickSet(r,only){const packs=shuf(Object.keys(POOL),r),out=[],used=new Set();
+ const ps=only?[only]:packs;const pool=[];
+ for(const k of ps)pool.push(shuf(POOL[k].filter(avail),r));
+ let i=0;while(out.length<7&&pool.some(a=>a.length)){const a=pool[i%pool.length];i++;const x=a.shift();if(x&&!used.has(x)){used.add(x);out.push(x)}}
+ if(out.length<7){for(const k of shuf(Object.keys(POOL),r))for(const x of shuf(POOL[k].filter(avail),r)){if(out.length<7&&!used.has(x)){used.add(x);out.push(x)}}}
+ return out}
+function best(key,v){try{if(v!==undefined)localStorage.setItem(key,JSON.stringify(v));const s=localStorage.getItem(key);return s?JSON.parse(s):null}catch(e){return null}}
+function home(){st="home";clearInterval(tm);g=null;meter();place(0,true);const k=dk(new Date()),d=best("plumb-day-"+k);
+ app.innerHTML=`<h1>Plumb</h1><p class="q">rare answers sink you deeper.</p>
+ <p>Seven prompts, 25 seconds each. Every prompt has hundreds of right answers, but the obvious ones barely move you. Find the ones almost nobody thinks of and you sink toward the trench. 700 points is 7,000 meters.</p>
+ ${d?`<p class="sm">Today’s dive: <b style="color:#fff">${fm(d.s*10)}</b> ${d.p}</p>`:""}
+ <div class="row"><button class="pri" id="d">${d?"Replay today":"Daily dive"} · ${dlabel(new Date())}</button></div>
+ <div class="row"><button id="u">∞ Unlimited</button><button id="a">Archive</button><button id="p">Themed packs</button></div>
+ <ul class="tiers">${TIERS.map((t,i)=>`<li><span style="color:${t[1]}">${t[0]}</span><span>${PTS[i]} pts · ${PTS[i]*10} m</span></li>`).join("")}</ul>
+ <p class="sm" style="margin-top:14px">Smartfish is the “too clever” tier: the go-to obscure pick that isn’t actually obscure. <span id="ai"></span> An unofficial fan-made game inspired by Krillion, not affiliated with it.</p>`;
+ $("d").onclick=()=>go({daily:k});$("u").onclick=()=>go({pack:null});$("a").onclick=archive;$("p").onclick=packs}
+function packs(){st="menu";app.innerHTML=`<h2>Themed packs</h2><p class="sm">Unlimited dives in one subject.</p><div class="grid">${Object.keys(POOL).map(k=>`<button data-k="${esc(k)}">${esc(k)}</button>`).join("")}</div><div class="row"><button id="b">Back</button></div>`;
+ app.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>go({pack:b.dataset.k}));$("b").onclick=home}
+function archive(){st="menu";const n=new Date();let h="";for(let i=1;i<=14;i++){const d=new Date(n);d.setDate(n.getDate()-i);const k=dk(d),r=best("plumb-day-"+k);h+=`<button data-d="${k}">${dlabel(d)}${r?" · "+fm(r.s*10):""}</button>`}
+ app.innerHTML=`<h2>Archive</h2><p class="sm">Replay a past daily dive.</p><div class="grid">${h}</div><div class="row"><button id="b">Back</button></div>`;
+ app.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>go({daily:+b.dataset.d}));$("b").onclick=home}
+async function go(o){st="load";g={qs:[],bp:[],i:0,score:0,res:[],seen:[],o,daily:o.daily||0};meter();place(0,true);
+ app.innerHTML='<div class="load">descending<span>…</span></div>';
+ try{
+  if(o.daily){g.qs=pickSet(rng(o.daily))}
+  else if(SM&&!noAI){try{g.qs=await genPrompts(o.pack||shuf(Object.keys(POOL),Math.random)[0])}catch(e){if(e&&e.code==="not_granted")noAI=true;g.qs=pickSet(Math.random,o.pack)}}
+  else g.qs=pickSet(Math.random,o.pack);
+ }catch(e){g.qs=pickSet(Math.random,o.pack)}
+ app.innerHTML='<div id="res"></div><div id="fact"></div><div id="q"></div>';ask()}
+function startBank(i){if(i>6||g.bp[i])return;const q=g.qs[i];g.bp[i]=getBank(q).catch(e=>{if(e&&e.code==="not_granted")noAI=true;const alt=shuf(Object.keys(BUILTIN).filter(x=>!g.qs.includes(x)),Math.random)[0]||Object.keys(BUILTIN)[0];g.qs[i]=alt;return parse(BUILTIN[alt])}).then(b=>{g.bp[i].ok=1;return b})}
+async function ask(){st="load";const i=g.i;startBank(i);startBank(i+1);
+ if(!g.bp[i].ok)$("q").innerHTML=`<p class="sm">Prompt ${i+1} of 7</p><div class="load">descending<span>…</span></div>`;
+ const es=await g.bp[i];g.cur={q:g.qs[i],e:es};st="ask";sg=null;
+ $("q").innerHTML=`<p class="sm">Prompt ${i+1} of 7</p><div class="clock"><i id="ck"></i></div><h2>${esc(g.cur.q)}</h2>
+ <input id="in" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type an answer" aria-label="Your answer">
+ <div class="hint" id="hint"></div><div class="row"><button class="pri" id="ok">Dive</button></div>`;
+ const inp=$("in"),h=$("hint");inp.focus({preventScroll:true});$("ok").onclick=()=>fin(inp.value);
+ const take=()=>{if(sg){inp.value=sg.d;sg=null;h.textContent="";inp.focus()}};
+ inp.oninput=()=>{sg=suggest(es,inp.value);h.innerHTML=sg?`Did you mean <b id="sg">${esc(sg.d)}</b>? Press Tab or tap it.`:"";if(sg)$("sg").onclick=take};
+ inp.onkeydown=e=>{if(e.key==="Enter")fin(inp.value);else if(e.key==="Tab"&&sg){e.preventDefault();take()}};
+ const t0=Date.now();clearInterval(tm);
+ tm=setInterval(()=>{const r=1-(Date.now()-t0)/LIM;$("ck").style.width=Math.max(0,r*100)+"%";if(r<=0)fin(inp.value)},100)}
+async function fin(v){if(st!=="ask")return;st="rev";clearInterval(tm);
+ const p=g.cur,typed=v.trim();let r=find(p.e,v),e=r&&r.e;
+ if(!e&&SM&&!noAI&&typed.length>1&&nz(typed)){$("ok").disabled=true;$("hint").textContent="Checking that one…";try{const j=await judge(p.q,p.e,typed);if(j){p.e.push(j);e=j;r={e:j}}}catch(x){if(x&&x.code==="not_granted")noAI=true}}
+ const t=e?e.t:-1,old=g.score;g.res.push(t);if(e)g.score+=PTS[t];
+ const hi=p.e.filter(x=>x.t>=4).map(x=>x.d).slice(0,3),lo=p.e.filter(x=>x.t===0).map(x=>x.d).slice(0,3),col=e?TIERS[t][1]:"#8a9aa8";
+ const fix=!e?"":r.fixed?` Autocorrected to ${esc(e.d)}.`:nz(e.d)!==nz(typed)?` Counted as ${esc(e.d)}.`:"";
+ clearTimeout(rt);$("res").innerHTML=`<div class="res" style="border-color:${col}"><div class="t" style="color:${col}">${e?TIERS[t][0]:"Not on the list"}<small>${e?"+"+PTS[t]+" pts · +"+PTS[t]*10+" m":"+0"}</small></div><div class="rar" aria-hidden="true">${TIERS.map((x,i)=>`<i style="${i<=t?"background:"+x[1]:""}"></i>`).join("")}</div><div class="you${e?"":" x"}">${typed?esc(typed):"(no answer)"}</div><div class="sm">${e?DESC[t]:"That one isn’t in the answer set."}${fix}${hi.length&&t<4?" Deep cuts: "+hi.map(esc).join(", ")+".":""}${lo.length?" Everyone says: "+lo.map(esc).join(", ")+".":""}</div></div>`;
+ rt=setTimeout(()=>{const x=$("res");x&&x.firstChild&&x.firstChild.classList.add("fade")},7000);
+ effects(t);descend(old,g.score);showFact(old,g.score);
+ g.i++;if(g.i<7)ask();else{$("q").innerHTML="";setTimeout(end,3300)}}
+const RK=[[700,"Leviathan"],[600,"Trench pioneer"],[450,"Deep-sea explorer"],[300,"Submariner"],[150,"Scuba diver"],[0,"Snorkeler"]];
+function end(){st="end";const m=g.score*10,r=RK.find(x=>g.score>=x[0]),pips=g.res.map(t=>t<0?"▫️":TIERS[t][2]).join("");
+ if(g.daily===dk(new Date())&&!best("plumb-day-"+g.daily))best("plumb-day-"+g.daily,{s:g.score,p:pips});else if(g.daily&&!best("plumb-day-"+g.daily))best("plumb-day-"+g.daily,{s:g.score,p:pips});
+ const sh="Plumb · rare answers sink you deeper\n"+pips+"\n"+fm(m)+" · "+zone(m)+" · "+r[1];
+ app.innerHTML=`<p class="sm">${zone(m)}</p><div class="big">${m.toLocaleString("en-US")}<span style="font-size:30px"> m</span></div><h2>${r[1]}</h2><div class="pips" aria-hidden="true">${pips}</div>
+ <p class="sm">${g.score} of 700 points.</p><div class="row"><button class="pri" id="sh">Copy result</button><button id="ag">Unlimited</button><button id="hm">Home</button></div>`;
+ $("ag").onclick=()=>go({pack:g.o.pack||null});$("hm").onclick=home;
+ $("sh").onclick=async()=>{try{await navigator.clipboard.writeText(sh);$("sh").textContent="Copied"}catch(e){$("sh").textContent="Copy failed"}}}
+home();
+</script>
+</body>
+</html>
